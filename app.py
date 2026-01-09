@@ -28,11 +28,8 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, cache_dir="/tmp/hf_cache")
 label_encoder = joblib.load("label_encoder.pkl")
 num_labels = len(label_encoder.classes_)
 
-# =====================
-# DOWNLOAD FINETUNED MODEL RUNTIME
-# =====================
 MODEL_PATH = "/tmp/indobert_finetuned_intent.pt"
-MODEL_URL = "https://huggingface.co/username/indobert-finetuned/resolve/main/indobert_finetuned_intent.pt"
+MODEL_URL = "YOUR_DIRECT_DOWNLOAD_LINK_HERE"  # ganti dengan link HuggingFace / GDrive / S3
 
 if not os.path.exists(MODEL_PATH):
     print("Downloading model...")
@@ -55,46 +52,33 @@ vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(questions)
 
 # =====================
-# LOAD WHISPER MODEL
+# WHISPER
 # =====================
-whisper_model = whisper.load_model("tiny")  # ringan
+whisper_model = whisper.load_model("tiny")
 
 # =====================
 # FUNCTIONS
 # =====================
 def predict_intent(text):
-    inputs = tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        padding="max_length",
-        max_length=128
-    )
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding="max_length", max_length=128)
     with torch.no_grad():
         outputs = model(**inputs)
-
     probs = torch.softmax(outputs.logits, dim=1)
     conf, idx = torch.max(probs, dim=1)
-
     intent = label_encoder.inverse_transform([idx.item()])[0]
     confidence = round(conf.item() * 100, 2)
     return intent, confidence
-
 
 def get_answer(user_text, intent):
     idxs = [i for i, v in enumerate(intents) if v == intent]
     if not idxs:
         return "Maaf, saya belum punya informasi yang sesuai."
-
     user_vec = vectorizer.transform([user_text])
     sims = cosine_similarity(user_vec, X[idxs])[0]
-
     best_idx = sims.argmax()
     score = sims[best_idx]
-
     if score < 0.3:
         return "Maaf, saya belum yakin dengan jawabannya. Silakan tanyakan dengan kalimat lain."
-
     return answers[idxs[best_idx]]
 
 # =====================
@@ -104,46 +88,34 @@ def get_answer(user_text, intent):
 def index():
     return render_template("index.html")
 
-
 @app.route("/chat_api", methods=["POST"])
 def chat_api():
     user_msg = request.json.get("message", "").strip()
     if not user_msg:
         return jsonify({"reply": "Silakan masukkan pesan."})
-
     intent, confidence = predict_intent(user_msg)
     answer = get_answer(user_msg, intent)
-
-    return jsonify({
-        "reply": answer,
-        "intent": intent,
-        "confidence": confidence
-    })
-
+    return jsonify({"reply": answer, "intent": intent, "confidence": confidence})
 
 @app.route("/voice", methods=["POST"])
 def voice():
     text = request.json.get("text", "").strip()
     if not text:
         return jsonify({"error": "Text kosong"}), 400
-
     tts = gTTS(text, lang="id")
     audio = BytesIO()
     tts.write_to_fp(audio)
     audio.seek(0)
     return send_file(audio, mimetype="audio/mpeg")
 
-
 @app.route("/stt", methods=["POST"])
 def stt():
     if "audio" not in request.files:
         return jsonify({"error": "File audio tidak ditemukan"}), 400
-
     audio_file = request.files["audio"]
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
         audio_file.save(tmp.name)
         path = tmp.name
-
     result = whisper_model.transcribe(path, language="id")
     os.remove(path)
     return jsonify({"text": result["text"]})
