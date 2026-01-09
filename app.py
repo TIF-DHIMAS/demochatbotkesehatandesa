@@ -25,17 +25,16 @@ intents = df["intent"].astype(str).tolist()
 # LOAD INTENT MODEL
 # =====================
 MODEL_NAME = "indobenchmark/indobert-base-p1"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
+# cache_dir supaya tidak ikut build ke image
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, cache_dir="/tmp/hf_cache")
 label_encoder = joblib.load("label_encoder.pkl")
 num_labels = len(label_encoder.classes_)
 
 model = AutoModelForSequenceClassification.from_pretrained(
-    MODEL_NAME, num_labels=num_labels
+    MODEL_NAME, num_labels=num_labels, cache_dir="/tmp/hf_cache"
 )
-model.load_state_dict(
-    torch.load("indobert_finetuned_intent.pt", map_location="cpu")
-)
+model.load_state_dict(torch.load("indobert_finetuned_intent.pt", map_location="cpu"))
 model.eval()
 
 # =====================
@@ -47,7 +46,7 @@ X = vectorizer.fit_transform(questions)
 # =====================
 # LOAD WHISPER MODEL
 # =====================
-whisper_model = whisper.load_model("tiny")
+whisper_model = whisper.load_model("tiny")  # model tiny ringan
 
 # =====================
 # FUNCTIONS
@@ -87,6 +86,7 @@ def get_answer(user_text, intent):
         return "Maaf, saya belum yakin dengan jawabannya. Silakan tanyakan dengan kalimat lain."
 
     return answers[idxs[best_idx]]
+
 
 # =====================
 # ROUTES
@@ -147,5 +147,5 @@ def stt():
 # RUN APP
 # =====================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Gunakan PORT environment variable Railway
+    port = int(os.environ.get("PORT", 10000))  # Railway PORT env
     app.run(host="0.0.0.0", port=port, debug=False)
