@@ -1,6 +1,6 @@
+torch==2.9.1
+transformers==4.35.0
 flask
-transformers
-torch==2.0.1+cpu
 pandas
 scikit-learn
 joblib
