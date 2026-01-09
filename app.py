@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify, send_file
 import torch
 import pandas as pd
 import joblib
-import whisper
 import tempfile, os
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sklearn.feature_extraction.text import TfidfVectorizer
