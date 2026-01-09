@@ -1,6 +1,6 @@
+flask
 torch==2.9.1
 transformers==4.35.0
-flask
 pandas
 scikit-learn
 joblib
