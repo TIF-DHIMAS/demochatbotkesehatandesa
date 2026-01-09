@@ -2,12 +2,14 @@ from flask import Flask, render_template, request, jsonify, send_file
 import torch
 import pandas as pd
 import joblib
-import tempfile, os
+import tempfile
+import os
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from gtts import gTTS
 from io import BytesIO
+import whisper  # pastikan whisper diimport
 
 app = Flask(__name__)
 
@@ -37,13 +39,13 @@ model.load_state_dict(
 model.eval()
 
 # =====================
-# TF-IDF
+# TF-IDF VECTOR
 # =====================
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(questions)
 
 # =====================
-# LOAD WHISPER (TINY)
+# LOAD WHISPER MODEL
 # =====================
 whisper_model = whisper.load_model("tiny")
 
@@ -55,7 +57,7 @@ def predict_intent(text):
         text,
         return_tensors="pt",
         truncation=True,
-        padding=True,
+        padding="max_length",
         max_length=128
     )
     with torch.no_grad():
@@ -112,9 +114,11 @@ def chat_api():
 
 @app.route("/voice", methods=["POST"])
 def voice():
-    text = request.json.get("text", "")
-    tts = gTTS(text, lang="id")
+    text = request.json.get("text", "").strip()
+    if not text:
+        return jsonify({"error": "Text kosong"}), 400
 
+    tts = gTTS(text, lang="id")
     audio = BytesIO()
     tts.write_to_fp(audio)
     audio.seek(0)
@@ -124,6 +128,9 @@ def voice():
 
 @app.route("/stt", methods=["POST"])
 def stt():
+    if "audio" not in request.files:
+        return jsonify({"error": "File audio tidak ditemukan"}), 400
+
     audio_file = request.files["audio"]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
@@ -136,5 +143,9 @@ def stt():
     return jsonify({"text": result["text"]})
 
 
+# =====================
+# RUN APP
+# =====================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))  # Gunakan PORT environment variable Railway
+    app.run(host="0.0.0.0", port=port, debug=False)
