@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from gtts import gTTS
 from io import BytesIO
-import whisper  # pastikan whisper diimport
+import whisper
 
 app = Flask(__name__)
 
@@ -46,7 +46,7 @@ X = vectorizer.fit_transform(questions)
 # =====================
 # LOAD WHISPER MODEL
 # =====================
-whisper_model = whisper.load_model("tiny")  # model tiny ringan
+whisper_model = whisper.load_model("tiny")  # ringan
 
 # =====================
 # FUNCTIONS
@@ -147,5 +147,5 @@ def stt():
 # RUN APP
 # =====================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Railway PORT env
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)
