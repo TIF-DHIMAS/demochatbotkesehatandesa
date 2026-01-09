@@ -1,21 +1,8 @@
-<<<<<<< HEAD
 flask
-torch
 transformers
+torch==2.0.1+cpu
 pandas
+scikit-learn
 joblib
-sentencepiece
-openai-whisper
-ffmpeg-python
+gunicorn
 gtts
-=======
-flask
-torch
-transformers
-pandas
-joblib
-sentencepiece
-openai-whisper
-ffmpeg-python
-gtts
->>>>>>> 8b0e7be50113767d6407bfdb3a45ad35d9012631
