@@ -1,4 +1,5 @@
-*.pt
-*.bin
-__pycache__/
-.env
+# Jangan commit model besar
+indobert_finetuned_intent.pt
+
+# cache HuggingFace
+/tmp/hf_cache
