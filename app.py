@@ -2,8 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 import torch
 import pandas as pd
 import joblib
-import tempfile
-import os
+import tempfile, os, requests
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -25,16 +24,28 @@ intents = df["intent"].astype(str).tolist()
 # LOAD INTENT MODEL
 # =====================
 MODEL_NAME = "indobenchmark/indobert-base-p1"
-
-# cache_dir supaya tidak ikut build ke image
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, cache_dir="/tmp/hf_cache")
 label_encoder = joblib.load("label_encoder.pkl")
 num_labels = len(label_encoder.classes_)
 
+# =====================
+# DOWNLOAD FINETUNED MODEL RUNTIME
+# =====================
+MODEL_PATH = "/tmp/indobert_finetuned_intent.pt"
+MODEL_URL = "https://huggingface.co/username/indobert-finetuned/resolve/main/indobert_finetuned_intent.pt"
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model...")
+    r = requests.get(MODEL_URL, stream=True)
+    with open(MODEL_PATH, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+    print("Model downloaded!")
+
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_NAME, num_labels=num_labels, cache_dir="/tmp/hf_cache"
 )
-model.load_state_dict(torch.load("indobert_finetuned_intent.pt", map_location="cpu"))
+model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
 model.eval()
 
 # =====================
@@ -67,7 +78,6 @@ def predict_intent(text):
 
     intent = label_encoder.inverse_transform([idx.item()])[0]
     confidence = round(conf.item() * 100, 2)
-
     return intent, confidence
 
 
@@ -86,7 +96,6 @@ def get_answer(user_text, intent):
         return "Maaf, saya belum yakin dengan jawabannya. Silakan tanyakan dengan kalimat lain."
 
     return answers[idxs[best_idx]]
-
 
 # =====================
 # ROUTES
@@ -122,7 +131,6 @@ def voice():
     audio = BytesIO()
     tts.write_to_fp(audio)
     audio.seek(0)
-
     return send_file(audio, mimetype="audio/mpeg")
 
 
@@ -132,16 +140,13 @@ def stt():
         return jsonify({"error": "File audio tidak ditemukan"}), 400
 
     audio_file = request.files["audio"]
-
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
         audio_file.save(tmp.name)
         path = tmp.name
 
     result = whisper_model.transcribe(path, language="id")
     os.remove(path)
-
     return jsonify({"text": result["text"]})
-
 
 # =====================
 # RUN APP
