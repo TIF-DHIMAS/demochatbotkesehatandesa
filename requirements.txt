@@ -7,5 +7,5 @@ joblib
 gunicorn
 gtts
 openai-whisper
-tqdm
 requests
+tqdm
