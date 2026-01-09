@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Chatbot Kesehatan Pedesaan</title>
+
+<style>
+<<<<<<< HEAD
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #e5ddd5;
+}
+.header {
+  background: #075E54;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-size: 18px;
+}
+.chat {
+  height: calc(100vh - 130px);
+  overflow-y: auto;
+  padding: 10px;
+}
+.bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  margin: 6px 0;
+  border-radius: 8px;
+  line-height: 1.4;
+  font-size: 14px;
+}
+.user {
+  background: #DCF8C6;
+  margin-left: auto;
+}
+.bot {
+  background: white;
+  margin-right: auto;
+}
+.input {
+  display: flex;
+  padding: 8px;
+  background: #f0f0f0;
+}
+.input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: none;
+}
+.input button {
+  margin-left: 6px;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 18px;
+}
+.send { background: #25D366; color: white; }
+.mic { background: #128C7E; color: white; }
+=======
+body { margin:0; font-family:Arial; background:#e5ddd5; }
+.header { background:#075E54; color:white; padding:12px; text-align:center; }
+.chat { height:calc(100vh - 140px); overflow-y:auto; padding:10px; }
+.bubble { max-width:75%; padding:10px 14px; margin:6px 0; border-radius:8px; }
+.user { background:#DCF8C6; margin-left:auto; }
+.bot { background:white; margin-right:auto; }
+.input { display:flex; padding:8px; background:#f0f0f0; }
+.input input { flex:1; padding:10px; border-radius:20px; border:none; }
+.input button { margin-left:6px; border:none; border-radius:50%; width:40px; height:40px; cursor:pointer; }
+.send { background:#25D366; color:white; }
+.mic { background:#128C7E; color:white; }
+>>>>>>> 8b0e7be50113767d6407bfdb3a45ad35d9012631
+</style>
+</head>
+
+<body>
+
+<<<<<<< HEAD
+<div class="header">🩺 Chatbot Kesehatan Pedesaan</div>
+<div id="chat" class="chat"></div>
+
+<div class="input">
+  <input id="text" placeholder="Ketik atau tekan mic..." />
+  <button class="mic" onclick="startVoice()">🎤</button>
+=======
+<div class="header">
+🩺 Chatbot Kesehatan Pedesaan<br>
+<small>Demo Web + Voice to Text</small>
+</div>
+
+<div id="chat" class="chat"></div>
+
+<div class="input">
+  <input id="text" placeholder="Ketik pesan..." />
+  <input type="file" id="audio" accept="audio/*" />
+  <button class="mic" onclick="sendAudio()">🎤</button>
+>>>>>>> 8b0e7be50113767d6407bfdb3a45ad35d9012631
+  <button class="send" onclick="sendText()">➤</button>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("text");
+
+function addBubble(text, cls) {
+  const div = document.createElement("div");
+  div.className = "bubble " + cls;
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function playVoice(text) {
+  fetch("/voice", {
+<<<<<<< HEAD
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({text: text})
+  })
+  .then(res => res.blob())
+  .then(blob => {
+    const audio = new Audio(URL.createObjectURL(blob));
+    audio.play();
+  });
+=======
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({text})
+  })
+  .then(res => res.blob())
+  .then(blob => new Audio(URL.createObjectURL(blob)).play());
+>>>>>>> 8b0e7be50113767d6407bfdb3a45ad35d9012631
+}
+
+function sendText() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  addBubble(text, "user");
+  input.value = "";
+
+  fetch("/chat_api", {
+<<<<<<< HEAD
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({message: text})
+=======
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:text})
+>>>>>>> 8b0e7be50113767d6407bfdb3a45ad35d9012631
+  })
+  .then(res => res.json())
+  .then(data => {
+    addBubble(data.reply, "bot");
+<<<<<<< HEAD
+    playVoice(data.reply); // 🔊 AUTO VOICE
+  });
+}
+
+/* VOICE INPUT */
+let recognition;
+if ("webkitSpeechRecognition" in window) {
+  recognition = new webkitSpeechRecognition();
+  recognition.lang = "id-ID";
+  recognition.onresult = e => {
+    input.value = e.results[0][0].transcript;
+    sendText();
+  };
+}
+
+function startVoice() {
+  if (recognition) recognition.start();
+=======
+    playVoice(data.reply);
+  });
+}
+
+function sendAudio() {
+  const file = document.getElementById("audio").files[0];
+  if (!file) return alert("Pilih file audio");
+
+  const fd = new FormData();
+  fd.append("audio", file);
+
+  fetch("/stt", { method:"POST", body:fd })
+    .then(res => res.json())
+    .then(data => {
+      input.value = data.text;
+      sendText();
+    });
+>>>>>>> 8b0e7be50113767d6407bfdb3a45ad35d9012631
+}
+</script>
+
+</body>
+</html>
