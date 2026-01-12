@@ -42,7 +42,7 @@ num_labels = len(label_encoder.classes_)
 # DOWNLOAD MODEL FROM GOOGLE DRIVE
 # =====================
 MODEL_PATH = f"{TMP_DIR}/indobert_finetuned_intent.pt"
-GDRIVE_FILE_ID = "GANTI_DENGAN_FILE_ID_ANDA"
+GDRIVE_FILE_ID = "1HiLB26nqZhsnRKc_d5QWzhTcvycg0AR7"
 
 if not os.path.exists(MODEL_PATH):
     print("⬇️ Downloading model from Google Drive...")
