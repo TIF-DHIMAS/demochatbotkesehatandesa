@@ -7,3 +7,4 @@ joblib
 gtts
 openai-whisper
 gdown
+numpy
